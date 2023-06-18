@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "warriorsplits",
+  "version": "${version}",
+  "name": "WarriorSplits",
+  "description": "",
+  "authors": [
+    "SimplyMerlin"
+  ],
+  "contact": {
+    "repo": "https://github.com/SimplyMerlin/WarriorSplits"
+  },
+  "license": "All-Rights-Reserved",
+  "environment": "*",
+  "entrypoints": {
+    "client": [
+      "com.simplymerlin.warriorsplits.WarriorSplits"
+    ]
+  },
+  "mixins": [
+    "WarriorSplits.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric": "*",
+    "minecraft": "${minecraft_version}"
+  }
+}
