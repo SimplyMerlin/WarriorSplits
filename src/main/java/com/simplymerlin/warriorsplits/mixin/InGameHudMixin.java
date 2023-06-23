@@ -13,6 +13,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.text.DecimalFormat;
 import java.time.Duration;
 
 import static com.simplymerlin.warriorsplits.utils.durationToString;
@@ -21,6 +22,7 @@ import static com.simplymerlin.warriorsplits.utils.durationToString;
 public abstract class InGameHudMixin {
 
     Timer timer = Timer.getInstance();
+    DecimalFormat df = new DecimalFormat("#0.0");
 
     @Inject(at = @At("TAIL"), method = "render")
     public void renderSplits(MatrixStack matrices, float tickDelta, CallbackInfo ci) {
@@ -39,11 +41,11 @@ public abstract class InGameHudMixin {
                 String relative = "";
                 boolean positive = false;
                 if (split.getPersonalBestTime() != null && hasHappenedOrCurrent) {
-                    long time = split.getRelativeTime(timer.getStartTime()).toSeconds() - split.getPersonalBestTime().toSeconds();
-                    if (time > -5 || split.hasEnded()) {
-                        relative = String.valueOf(time);
-                    }
+                    double time = (double) (split.getRelativeTime(timer.getStartTime()).toMillis() - split.getPersonalBestTime().toMillis()) / 1000;
                     positive = time > 0;
+                    if (time > -5 || split.hasEnded()) {
+                        relative = (positive ? "+" : "") + df.format(time);
+                    }
                 }
                 int width1 = renderer.getWidth(relative);
                 renderer.drawWithShadow(matrices, relative, 192 - width1, y, positive ? WarriorLiterals.POSITIVE_COLOR : WarriorLiterals.NEGATIVE_COLOR);
