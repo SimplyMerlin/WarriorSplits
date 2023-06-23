@@ -38,6 +38,10 @@ public class Timer {
         started = true;
     }
 
+    public boolean isStarted() {
+        return started;
+    }
+
     public void endTimer() {
         endTime = Instant.now();
         started = false;

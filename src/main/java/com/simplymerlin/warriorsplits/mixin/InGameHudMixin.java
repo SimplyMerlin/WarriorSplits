@@ -2,9 +2,9 @@ package com.simplymerlin.warriorsplits.mixin;
 
 import com.simplymerlin.warriorsplits.Split;
 import com.simplymerlin.warriorsplits.Timer;
+import com.simplymerlin.warriorsplits.WarriorLiterals;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
@@ -14,8 +14,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.time.Duration;
-import java.time.Instant;
-import java.util.List;
 
 import static com.simplymerlin.warriorsplits.utils.durationToString;
 
@@ -26,39 +24,46 @@ public abstract class InGameHudMixin {
 
     @Inject(at = @At("TAIL"), method = "render")
     public void renderSplits(MatrixStack matrices, float tickDelta, CallbackInfo ci) {
-        MinecraftClient minecraftClient = MinecraftClient.getInstance();
+            MinecraftClient minecraftClient = MinecraftClient.getInstance();
 
-        TextRenderer renderer = minecraftClient.textRenderer;
+            TextRenderer renderer = minecraftClient.textRenderer;
 
-        renderer.drawWithShadow(matrices, "WarriorSplits " + durationToString(timer.getTime()), 10, 10, 0xFFFFFF);
+            var splits = timer.getSplits();
+            int i = 0;
 
-        var splits = timer.getSplits();
-        int i = 0;
-
-        for (Split split : splits) {
-            int y = 19 + i * 9;
-            renderer.drawWithShadow(matrices, split.getName(), 10, y, 0xFFFFFF);
-            String relative = "";
-            if (split.getPersonalBestTime() != null && i <= timer.getCurrentSplit()) {
-                long time = split.getRelativeTime(timer.getStartTime()).toSeconds() - split.getPersonalBestTime().toSeconds();
-                if (time > -5 || split.hasEnded()) {
-                    relative = String.valueOf(time);
+            for (Split split : splits) {
+                int y = 10 + i * 9;
+                boolean hasHappenedOrCurrent = i <= timer.getCurrentSplit();
+                boolean isCurrent = i == timer.getCurrentSplit();
+                renderer.drawWithShadow(matrices, split.getName(), 10, y, isCurrent ? WarriorLiterals.ACTIVE_COLOR : WarriorLiterals.INACTIVE_COLOR);
+                String relative = "";
+                boolean positive = false;
+                if (split.getPersonalBestTime() != null && hasHappenedOrCurrent) {
+                    long time = split.getRelativeTime(timer.getStartTime()).toSeconds() - split.getPersonalBestTime().toSeconds();
+                    if (time > -5 || split.hasEnded()) {
+                        relative = String.valueOf(time);
+                    }
+                    positive = time > 0;
                 }
+                int width1 = renderer.getWidth(relative);
+                renderer.drawWithShadow(matrices, relative, 192 - width1, y, positive ? WarriorLiterals.POSITIVE_COLOR : WarriorLiterals.NEGATIVE_COLOR);
+                Duration time = null;
+                if (split.getPersonalBestTime() != null) {
+                    time = split.getPersonalBestTime();
+                }
+                if (split.getRelativeTime() != null) {
+                    time = split.getRelativeTime();
+                }
+                String bestTime = time != null ? durationToString(time) : "-";
+                int width = renderer.getWidth(bestTime);
+                renderer.drawWithShadow(matrices, bestTime, 256 - width, y, isCurrent ? WarriorLiterals.ACTIVE_COLOR : WarriorLiterals.INACTIVE_COLOR);
+                ++i;
             }
-            int width1 = renderer.getWidth(relative);
-            renderer.drawWithShadow(matrices, relative, 192 - width1, y, 0xFFFFFF);
-            Duration time = null;
-            if (split.getPersonalBestTime() != null) {
-                time = split.getPersonalBestTime();
-            }
-            if (split.getRelativeTime() != null) {
-                time = split.getRelativeTime();
-            }
-            String bestTime = time != null ? durationToString(time) : "-";
-            int width = renderer.getWidth(bestTime);
-            renderer.drawWithShadow(matrices, bestTime, 256 - width, y, 0xFFFFFF);
-            ++i;
-        }
+            int y = (splits.size() + 1) * 9 + 10;
+
+        renderer.drawWithShadow(matrices, "WarriorSplits", 10, y, WarriorLiterals.LOGO_COLOR);
+        String duration = durationToString(timer.getTime());
+        renderer.drawWithShadow(matrices, duration, 256 - renderer.getWidth(duration), y, timer.isStarted() ? WarriorLiterals.MAIN_CLOCK_COLOR : WarriorLiterals.INACTIVE_COLOR);
 
     }
 
