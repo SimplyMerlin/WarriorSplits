@@ -1,8 +1,8 @@
-package com.simplymerlin.warriorsplits;
+package com.simplymerlin.warriorsplits.util;
 
 import java.time.Duration;
 
-public class utils {
+public class Utils {
 
     public static String durationToString(Duration duration) {
         String minutes = (duration.toMinutesPart() < 10 ? "0" : "") + duration.toMinutesPart();

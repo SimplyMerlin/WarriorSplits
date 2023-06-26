@@ -1,5 +1,8 @@
 package com.simplymerlin.warriorsplits;
 
+import com.simplymerlin.warriorsplits.course.Course;
+import com.simplymerlin.warriorsplits.segment.Segment;
+
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
@@ -7,59 +10,43 @@ import java.util.*;
 public class Timer {
 
     static Timer instance;
-
     int currentSplit = 0;
-    List<Split> splits;
-
     boolean started = false;
     Instant startTime;
     Instant endTime;
-    Duration bestTime;
+
+    Map<String, Course> loadedCourses = new HashMap<>();
+    Course currentCourse;
+
+    List<Segment> segments;
 
     public Timer() {
         instance = this;
-        splits = new ArrayList<>();
-        for (int x = 1; x < 4; x++) {
-            for (int y = 1; y < 4; y++) {
-                splits.add(new Split("[M" + x + "-" + y + "]"));
-            }
-        }
-        splits.add(new Split("[B4-2]"));
     }
 
-    public static Timer getInstance() {
+    public static Timer instance() {
         return instance;
     }
 
-    public void startTimer() {
-        resetTimer();
+    public void start() {
+        reset();
         startTime = Instant.now();
-        splits.get(currentSplit).start();
+        segments.get(currentSplit).start(startTime);
         started = true;
     }
 
-    public boolean isStarted() {
+    public boolean started() {
         return started;
     }
 
-    public void endTimer() {
+    public void end() {
         endTime = Instant.now();
         started = false;
+        currentCourse.save(segments);
     }
 
-    public void resetTimer() {
-        if (endTime != null) {
-            Duration time = Duration.between(startTime, endTime);
-            if (bestTime == null || time.compareTo(bestTime) < 0) {
-                bestTime = time;
-                for (Split split : splits) {
-                    split.setPersonalBestTime();
-                }
-            }
-        }
-        for (Split split : splits) {
-            split.reset();
-        }
+    public void reset() {
+        segments = currentCourse.segments();
         startTime = null;
         endTime = null;
         started = false;
@@ -67,20 +54,42 @@ public class Timer {
     }
 
     public void split() {
-        splits.get(currentSplit).end(startTime);
-        if (splits.size() == currentSplit + 1) {
-            endTimer();
+        // By doing this, we assure that internally the old split ends and new split starts at the exact same time!
+        Instant endTime = segments.get(currentSplit).end(startTime);
+        if (segments.size() == currentSplit + 1) {
+            end();
             return;
         }
         ++currentSplit;
-        splits.get(currentSplit).start();
+        segments.get(currentSplit).start(endTime);
     }
 
-    public List<Split> getSplits() {
-        return splits;
+    public Course course() {
+        return currentCourse;
     }
 
-    public Duration getTime() {
+    public void course(String name) {
+        if (name == null) {
+            currentCourse = null;
+            return;
+        }
+        if (currentCourse != null && name.equals(currentCourse.name())) {
+            return;
+        }
+        if (loadedCourses.containsKey(name)) {
+            currentCourse = loadedCourses.get(name);
+        } else {
+            currentCourse = new Course(name);
+            loadedCourses.put(name, currentCourse);
+        }
+        segments = currentCourse.segments();
+    }
+
+    public List<Segment> segments() {
+        return segments;
+    }
+
+    public Duration time() {
         if (endTime != null) {
             return Duration.between(startTime, endTime);
         }
@@ -90,11 +99,11 @@ public class Timer {
         return Duration.between(startTime, Instant.now());
     }
 
-    public Instant getStartTime() {
+    public Instant startTime() {
         return startTime;
     }
 
-    public int getCurrentSplit() {
+    public int currentSplit() {
         return currentSplit;
     }
 }
