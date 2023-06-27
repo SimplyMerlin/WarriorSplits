@@ -3,7 +3,7 @@ An ingame speedrun timer for the MCC Island game; Parkour Warrior!
 
 ## How it works
 Pretty simple stuff, it just detects when you start, reset, or finish an obstacle and changes an ingame timer accordingly.
-![image](https://github.com/SimplyMerlin/WarriorSplits/assets/30577208/fd44395d-f8b9-453d-8272-dd720704ab27)
+![Timer](https://github.com/SimplyMerlin/WarriorSplits/assets/30577208/3b52e150-0b08-4f6e-bea7-98ab7e70ca14)
 
 ## Todo
 * Make saving async
