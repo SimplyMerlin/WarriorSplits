@@ -1,5 +1,6 @@
 package com.simplymerlin.warriorsplits.course;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.simplymerlin.warriorsplits.gson.GsonProvider;
@@ -17,27 +18,37 @@ public class Course {
     String name;
     List<SavableSegment> segments = new ArrayList<>();
 
+    RunType runType = RunType.STANDARD;
     File file;
-    JsonObject jsonObject;
+    SavedCourse savedCourse;
 
     public Course(String name) {
         this.name = name;
         file = FabricLoader.getInstance().getConfigDir().resolve("warriorsplits/" + name + ".json").toFile();
         if (file.exists()) {
             try (FileReader reader = new FileReader(file)) {
-                jsonObject = JsonParser.parseReader(reader).getAsJsonObject();
-                segments = GsonProvider.gson().fromJson(jsonObject.get("pb"), GsonProvider.listOfSavableSegment());
+                savedCourse = GsonProvider.gson().fromJson(reader, SavedCourse.class);
+                if (!savedCourse.hasRun(runType)) {
+                    generateSegments();
+                    return;
+                }
+                segments = savedCourse.getRun(runType).pb();
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         } else {
-            for (int x = 1; x < 4; x++) {
-                for (int y = 1; y < 4; y++) {
-                    segments.add(new SavableSegment("[M" + x + "-" + y + "]", null, null));
-                }
-            }
-            segments.add(new SavableSegment("[B4-1]", null, null));
+            generateSegments();
+            savedCourse = new SavedCourse();
         }
+    }
+
+    private void generateSegments() {
+        for (int x = 1; x < 4; x++) {
+            for (int y = 1; y < 4; y++) {
+                segments.add(new SavableSegment("[M" + x + "-" + y + "]", null, null));
+            }
+        }
+        segments.add(new SavableSegment("[B4-1]", null, null));
     }
 
     public void save(List<Segment> newSegments) {
@@ -49,12 +60,12 @@ public class Course {
                 segments.add(SavableSegment.savableSegment(newSegment));
             }
         }
-        JsonObject jsonObject = new JsonObject();
-        jsonObject.add("pb", GsonProvider.gson().toJsonTree(segments));
+        savedCourse.putPB(runType, segments);
+
         File file = FabricLoader.getInstance().getConfigDir().resolve("warriorsplits/" + name + ".json").toFile();
-        file.getParentFile().mkdirs();
+        boolean mkdir = file.getParentFile().mkdirs();
         try (var fw = new FileWriter(file)) {
-            fw.write(jsonObject.toString());
+            fw.write(GsonProvider.gson().toJson(savedCourse));
             fw.flush();
         } catch (IOException e) {
             throw new RuntimeException(e);
