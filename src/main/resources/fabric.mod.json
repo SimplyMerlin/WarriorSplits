@@ -3,14 +3,17 @@
   "id": "warriorsplits",
   "version": "${version}",
   "name": "WarriorSplits",
-  "description": "",
+  "description": "An in-game speedrun timer for Parkour Warrior on MCCI!",
   "authors": [
     "SimplyMerlin"
   ],
   "contact": {
-    "repo": "https://github.com/SimplyMerlin/WarriorSplits"
+    "repo": "https://github.com/SimplyMerlin/WarriorSplits",
+    "homepage": "https://github.com/SimplyMerlin/WarriorSplits",
+    "issues": "https://github.com/SimplyMerlin/WarriorSplits/issues"
   },
-  "license": "All-Rights-Reserved",
+  "license": "MIT",
+  "icon": "assets/warriorsplits/icon.png",
   "environment": "*",
   "entrypoints": {
     "client": [
