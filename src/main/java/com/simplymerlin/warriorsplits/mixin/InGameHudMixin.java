@@ -18,7 +18,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.text.DecimalFormat;
 import java.time.Duration;
-import java.time.Instant;
 
 import static com.simplymerlin.warriorsplits.util.Utils.durationToString;
 
@@ -28,9 +27,18 @@ public abstract class InGameHudMixin {
     Timer timer = Timer.instance();
     DecimalFormat df = new DecimalFormat("#0.0");
 
+    int yOffset = 10;
+    int lineHeight = 9;
+    int xSegmentName = 10;
+    int xRelativeTime = 192;
+    int xBestTime = 256;
+    int activeColor = WarriorLiterals.ACTIVE_COLOR;
+    int inactiveColor = WarriorLiterals.INACTIVE_COLOR;
+    int positiveColor = WarriorLiterals.POSITIVE_COLOR;
+    int negativeColor = WarriorLiterals.NEGATIVE_COLOR;
+
     @Inject(at = @At("TAIL"), method = "render")
     public void renderSplits(MatrixStack matrices, float tickDelta, CallbackInfo ci) {
-        Instant start = Instant.now();
         MinecraftClient minecraftClient = MinecraftClient.getInstance();
 
         TextRenderer renderer = minecraftClient.textRenderer;
@@ -39,40 +47,55 @@ public abstract class InGameHudMixin {
         if (timer.course() != null) {
             var segments = timer.segments();
             for (Segment segment : segments) {
-                int y = 10 + i * 9;
+                int y = yOffset + i * lineHeight;
                 boolean hasHappenedOrCurrent = i <= timer.currentSplit();
                 boolean isCurrent = i == timer.currentSplit();
-                renderer.drawWithShadow(matrices, segment.name(), 10, y, isCurrent ? WarriorLiterals.ACTIVE_COLOR : WarriorLiterals.INACTIVE_COLOR);
-                String relative = "";
+
+                // Render segment name
+                renderer.drawWithShadow(matrices, segment.name(), xSegmentName, y, isCurrent ? activeColor : inactiveColor);
+
+                String relativeTime = "";
                 boolean positive = false;
+
                 if (segment.comparisonRelativeTime() != null && hasHappenedOrCurrent) {
-                    double time = (double) (segment.relativeTime(timer.startTime()).toMillis() - segment.comparisonRelativeTime().toMillis()) / 1000;
+                    long relativeTimeMillis = segment.relativeTime(timer.startTime()).toMillis() - segment.comparisonRelativeTime().toMillis();
+                    double time = (double) relativeTimeMillis / 1000;
                     positive = time > 0;
+
                     if (time > -5 || segment.ended()) {
-                        relative = (positive ? "+" : "") + df.format(time);
+                        relativeTime = (positive ? "+" : "") + df.format(time);
                     }
                 }
-                int width1 = renderer.getWidth(relative);
-                renderer.drawWithShadow(matrices, relative, 192 - width1, y, positive ? WarriorLiterals.POSITIVE_COLOR : WarriorLiterals.NEGATIVE_COLOR);
+
+                int relativeTimeWidth = renderer.getWidth(relativeTime);
+                renderer.drawWithShadow(matrices, relativeTime, xRelativeTime - relativeTimeWidth, y, positive ? positiveColor : negativeColor);
+
                 Duration time = null;
+
                 if (segment.comparisonRelativeTime() != null) {
                     time = segment.comparisonRelativeTime();
                 }
+
+                // If there's already a relative time, use the segment's relative time
                 if (segment.relativeTime() != null) {
                     time = segment.relativeTime();
                 }
+
                 String bestTime = time != null ? durationToString(time) : "-";
-                int width = renderer.getWidth(bestTime);
-                renderer.drawWithShadow(matrices, bestTime, 256 - width, y, isCurrent ? WarriorLiterals.ACTIVE_COLOR : WarriorLiterals.INACTIVE_COLOR);
-                ++i;
+
+                // Time width shouldn't change ever (unless someone takes 100 minutes on one segment?) so caching this would be a quick performance win.
+                int bestTimeWidth = renderer.getWidth(bestTime);
+                renderer.drawWithShadow(matrices, bestTime, xBestTime - bestTimeWidth, y, isCurrent ? activeColor : inactiveColor);
+
+                i++;
             }
         }
-        int y = (i + 1) * 9 + 10;
+        int y = yOffset + (i + 1) * lineHeight;
 
 
         renderer.drawWithShadow(matrices, "WarriorSplits", 10, y, WarriorLiterals.LOGO_COLOR);
-        String duration = durationToString(timer.time());
-        renderer.drawWithShadow(matrices, duration, 256 - renderer.getWidth(duration), y, timer.started() ? WarriorLiterals.MAIN_CLOCK_COLOR : WarriorLiterals.INACTIVE_COLOR);
+        String time = durationToString(timer.time());
+        renderer.drawWithShadow(matrices, time, 256 - renderer.getWidth(time), y, timer.started() ? WarriorLiterals.MAIN_CLOCK_COLOR : WarriorLiterals.INACTIVE_COLOR);
     }
 
     @Inject(at = @At("TAIL"), method = "setTitle")
@@ -96,7 +119,7 @@ public abstract class InGameHudMixin {
     @Inject(at = @At("TAIL"), method = "renderScoreboardSidebar")
     public void setCourse(MatrixStack matrixStack, ScoreboardObjective scoreboardObjective, CallbackInfo ci) {
         if (
-                // hey noxcrew dev reading this code, when ingame the displayname has a space v so please don't remove that!!!
+                //hey noxcrew dev reading this code, when in dojo the displayname has a space v so please don't remove that!!!
                 scoreboardObjective.getDisplayName().getString().equals("MCCI: PARKOUR WARRIOR ")
         ) {
             for (ScoreboardPlayerScore score : scoreboardObjective.getScoreboard().getAllPlayerScores(scoreboardObjective)) {
@@ -106,7 +129,7 @@ public abstract class InGameHudMixin {
                 Text balls = team.getPrefix();
                 // COURSE: Course #
                 if (balls.getString().contains("COURSE:")) {
-                    timer.course(balls.getString().substring(17));
+                    timer.course("month/1/" + balls.getString().substring(17));
                 }
             }
         } else {

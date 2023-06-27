@@ -6,7 +6,7 @@ Pretty simple stuff, it just detects when you start, reset, or finish an obstacl
 ![image](https://github.com/SimplyMerlin/WarriorSplits/assets/30577208/fd44395d-f8b9-453d-8272-dd720704ab27)
 
 ## Todo
-* Add file saving
+* Make saving async
 * Support months (need to figure out how to detect which month)
 * Support daily (Need battle pass lol)
 * Allow advanced/expert runs
