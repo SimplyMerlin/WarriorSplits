@@ -1,14 +1,14 @@
 package com.simplymerlin.warriorsplits.course;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.simplymerlin.warriorsplits.gson.GsonProvider;
 import com.simplymerlin.warriorsplits.segment.SavableSegment;
 import com.simplymerlin.warriorsplits.segment.Segment;
 import net.fabricmc.loader.api.FabricLoader;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
