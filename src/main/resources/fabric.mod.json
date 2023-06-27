@@ -14,7 +14,7 @@
   },
   "license": "MIT",
   "icon": "assets/warriorsplits/icon.png",
-  "environment": "*",
+  "environment": "client",
   "entrypoints": {
     "client": [
       "com.simplymerlin.warriorsplits.WarriorSplits"
