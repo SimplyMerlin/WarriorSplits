@@ -72,12 +72,14 @@ public class Timer {
 
     public void course(String name) {
         if (name == null) {
+            reset();
             currentCourse = null;
             return;
         }
         if (currentCourse != null && name.equals(currentCourse.name())) {
             return;
         }
+        reset();
         if (loadedCourses.containsKey(name)) {
             currentCourse = loadedCourses.get(name);
         } else {
