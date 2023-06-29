@@ -2,6 +2,7 @@ package com.simplymerlin.warriorsplits.mixin;
 
 import com.simplymerlin.warriorsplits.Timer;
 import com.simplymerlin.warriorsplits.WarriorLiterals;
+import com.simplymerlin.warriorsplits.segment.ComparisonType;
 import com.simplymerlin.warriorsplits.segment.Segment;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
@@ -67,8 +68,16 @@ public abstract class InGameHudMixin {
                     }
                 }
 
+                int relativeColor = positive ? positiveColor : negativeColor;
+                if (
+                        segment.length() != null &&
+                        segment.comparison(ComparisonType.GOLD).length() != null &&
+                        segment.length().compareTo(segment.comparison(ComparisonType.GOLD).length()) < 0) {
+                    relativeColor = 0xFFAA00;
+                }
+
                 int relativeTimeWidth = renderer.getWidth(relativeTime);
-                renderer.drawWithShadow(matrices, relativeTime, xRelativeTime - relativeTimeWidth, y, positive ? positiveColor : negativeColor);
+                renderer.drawWithShadow(matrices, relativeTime, xRelativeTime - relativeTimeWidth, y, relativeColor);
 
                 Duration time = null;
 
@@ -133,7 +142,7 @@ public abstract class InGameHudMixin {
                 }
             }
         } else {
-            timer.course(null);
+            //timer.course(null);
         }
     }
 

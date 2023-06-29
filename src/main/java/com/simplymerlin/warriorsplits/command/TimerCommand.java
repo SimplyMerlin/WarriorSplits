@@ -2,7 +2,9 @@ package com.simplymerlin.warriorsplits.command;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.simplymerlin.warriorsplits.Timer;
+import com.simplymerlin.warriorsplits.segment.ComparisonType;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
+import net.minecraft.command.argument.EnumArgumentType;
 import net.minecraft.text.Text;
 
 import static com.mojang.brigadier.arguments.StringArgumentType.string;
@@ -38,6 +40,21 @@ public final class TimerCommand {
                         .executes(
                                 ctx -> {
                                     timer.course(ctx.getArgument("course", String.class));
+                                    return 1;
+                                }
+                        )))
+                .then(literal("setcomparison")
+                        .then(literal("pb")
+                                .executes(
+                                        ctx -> {
+                                            timer.comparison(ComparisonType.PERSONAL_BEST);
+                                            return 1;
+                                        }
+                                ))
+                        .then(literal("gold")
+                        .executes(
+                                ctx -> {
+                                    timer.comparison(ComparisonType.GOLD);
                                     return 1;
                                 }
                         )))

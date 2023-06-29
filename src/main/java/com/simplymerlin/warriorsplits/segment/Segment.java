@@ -2,6 +2,7 @@ package com.simplymerlin.warriorsplits.segment;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Map;
 
 public class Segment {
 
@@ -10,17 +11,21 @@ public class Segment {
     private Instant startTime;
     private Instant endTime;
 
-    private Duration comparisonRelativeTime;
-    private Duration comparisonLength;
+    private final Map<ComparisonType, Comparison> comparisons;
+    private Comparison activeComparison;
+    private ComparisonType comparisonType = ComparisonType.PERSONAL_BEST;
 
-    public Segment(String name) {
+    public Segment(String name, Map<ComparisonType, Comparison> comparisons) {
         this.name = name;
+        this.comparisons = comparisons;
+        loadComparison();
     }
 
-    public Segment(String name, Duration comparisonRelativeTime, Duration comparisonLength) {
+    public Segment(String name, Map<ComparisonType, Comparison> comparisons, ComparisonType comparisonType) {
         this.name = name;
-        this.comparisonRelativeTime = comparisonRelativeTime;
-        this.comparisonLength = comparisonLength;
+        this.comparisons = comparisons;
+        this.comparisonType = comparisonType;
+        loadComparison();
     }
 
     public String name() {
@@ -70,6 +75,9 @@ public class Segment {
     }
 
     public Duration length() {
+        if (endTime == null)
+            return null;
+
         return Duration.between(startTime, endTime);
     }
 
@@ -78,18 +86,38 @@ public class Segment {
     }
 
     public Duration comparisonLength() {
-        return comparisonLength;
+        return activeComparison.length();
     }
 
     public Duration comparisonRelativeTime() {
-        return comparisonRelativeTime;
+        return activeComparison.relativeTime();
     }
 
-    public void comparisonLength(Duration comparisonLength) {
-        this.comparisonLength = comparisonLength;
+    public Map<ComparisonType, Comparison> comparisons() {
+        return comparisons;
     }
 
-    public void comparsionRelativeTime(Duration comparisonRelativeTime) {
-        this.comparisonRelativeTime = comparisonRelativeTime;
+    public Comparison comparison(ComparisonType type) {
+        var comparison = comparisons.get(type);
+        if (comparison == null)
+            comparison = new Comparison(null, null);
+        return comparison;
+    }
+
+    public ComparisonType comparisonType() {
+        return comparisonType;
+    }
+
+    public void comparisonType(ComparisonType comparisonType) {
+        this.comparisonType = comparisonType;
+        loadComparison();
+    }
+
+    private void loadComparison() {
+        if (!comparisons.containsKey(comparisonType)) {
+            activeComparison = new Comparison(null, null);
+            return;
+        }
+        activeComparison = comparisons.get(comparisonType);
     }
 }

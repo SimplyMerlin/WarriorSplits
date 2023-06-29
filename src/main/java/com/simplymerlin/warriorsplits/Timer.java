@@ -1,6 +1,8 @@
 package com.simplymerlin.warriorsplits;
 
 import com.simplymerlin.warriorsplits.course.Course;
+import com.simplymerlin.warriorsplits.segment.Comparison;
+import com.simplymerlin.warriorsplits.segment.ComparisonType;
 import com.simplymerlin.warriorsplits.segment.Segment;
 
 import java.time.Duration;
@@ -19,6 +21,7 @@ public class Timer {
 
     Map<String, Course> loadedCourses = new HashMap<>();
     Course currentCourse;
+    ComparisonType comparison = ComparisonType.PERSONAL_BEST;
 
     List<Segment> segments;
 
@@ -48,7 +51,7 @@ public class Timer {
     }
 
     public void reset() {
-        segments = currentCourse.segments();
+        segments = currentCourse.segments(comparison);
         startTime = null;
         endTime = null;
         started = false;
@@ -79,14 +82,13 @@ public class Timer {
         if (currentCourse != null && name.equals(currentCourse.name())) {
             return;
         }
-        reset();
         if (loadedCourses.containsKey(name)) {
             currentCourse = loadedCourses.get(name);
         } else {
             currentCourse = new Course(name);
             loadedCourses.put(name, currentCourse);
         }
-        segments = currentCourse.segments();
+        reset();
     }
 
     public List<Segment> segments() {
@@ -109,5 +111,16 @@ public class Timer {
 
     public int currentSplit() {
         return currentSplit;
+    }
+
+    public ComparisonType comparison() {
+        return comparison;
+    }
+
+    public void comparison(ComparisonType type) {
+        this.comparison = type;
+        for (Segment segment : segments) {
+            segment.comparisonType(type);
+        }
     }
 }
