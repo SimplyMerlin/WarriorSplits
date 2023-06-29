@@ -1,5 +1,13 @@
-# `WarriorSplits 🏃`
-An ingame speedrun timer for the MCC Island game; Parkour Warrior!
+<p align="center">
+ <img src="https://github.com/SimplyMerlin/WarriorSplits/assets/30577208/8226ed97-4b8f-43ef-9991-f41f614f269f" alt="warriorsplits banner">
+</p>
+<h1 align="center"><code>WarriorSplits 🏃</code></h1>
+
+<p align="center">
+ An ingame speedrun timer for the MCC Island game; Parkour Warrior!
+ <br>
+ <a href="https://modrinth.com/mod/warriorsplits">Download on modrinth.</a>
+</p>
 
 ## How it works
 Pretty simple stuff, it just detects when you start, reset, or finish an obstacle and changes an ingame timer accordingly.
@@ -12,6 +20,7 @@ Pretty simple stuff, it just detects when you start, reset, or finish an obstacl
 * Allow advanced/expert runs
 
 ## Tech stuff
+
 * **InGameHudMixin**
   * Here the UI gets rendered
   * Titles and subtitles get hooked into to detect splits
