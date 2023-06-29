@@ -67,11 +67,17 @@ public class Course {
 
         // GOLD
         int i = 0;
+        Duration relative = Duration.ZERO;
         for (Segment newSegment : newSegments) {
             var oldSegment = segments.get(i).getComparison(ComparisonType.GOLD);
+            Duration length;
             if (oldSegment == null || newSegment.length().compareTo(oldSegment.length()) < 0 ) {
-                segments.get(i).putComparison(ComparisonType.GOLD, Comparison.of(newSegment));
+                length = newSegment.length();
+            } else {
+                length = oldSegment.length();
             }
+            relative = relative.plus(length);
+            segments.get(i).putComparison(ComparisonType.GOLD, new Comparison(relative, length));
             i++;
         }
 
