@@ -15,7 +15,6 @@ Pretty simple stuff, it just detects when you start, reset, or finish an obstacl
 
 ## Todo
 * Make saving async
-* Support months (need to figure out how to detect which month)
 * Support daily (Need battle pass lol)
 * Allow advanced/expert runs
 
