@@ -20,12 +20,17 @@ public class Course {
     String name;
     List<SavableSegment> segments = new ArrayList<>();
 
-    RunType runType = RunType.STANDARD;
+    RunType runType;
     File file;
     SavedCourse savedCourse;
 
     public Course(String name) {
+        this(name, RunType.STANDARD);
+    }
+
+    public Course(String name, RunType runType) {
         this.name = name;
+        this.runType = runType;
         file = FabricLoader.getInstance().getConfigDir().resolve("warriorsplits/" + name + ".json").toFile();
         if (file.exists()) {
             try (FileReader reader = new FileReader(file)) {
