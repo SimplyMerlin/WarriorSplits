@@ -1,15 +1,13 @@
 package com.simplymerlin.warriorsplits;
 
 import com.simplymerlin.warriorsplits.course.Course;
-import com.simplymerlin.warriorsplits.segment.Comparison;
 import com.simplymerlin.warriorsplits.segment.ComparisonType;
 import com.simplymerlin.warriorsplits.segment.Segment;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.HashMap;
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 
 public class Timer {
 
@@ -19,14 +17,18 @@ public class Timer {
     Instant startTime;
     Instant endTime;
 
-    Map<String, Course> loadedCourses = new HashMap<>();
     Course currentCourse;
     ComparisonType comparison = ComparisonType.PERSONAL_BEST;
 
     List<Segment> segments;
 
+    int currentMonth;
+
     public Timer() {
         instance = this;
+        int month = LocalDateTime.now().getMonthValue();
+        int yearMonths = (LocalDateTime.now().getYear() - 2023) * 12;
+        currentMonth = yearMonths + month - 5;
     }
 
     public static Timer instance() {
@@ -51,7 +53,9 @@ public class Timer {
     }
 
     public void reset() {
-        segments = currentCourse.segments(comparison);
+        if (currentCourse != null) {
+            segments = currentCourse.segments(comparison);
+        }
         startTime = null;
         endTime = null;
         started = false;
@@ -75,20 +79,19 @@ public class Timer {
 
     public void course(String name) {
         if (name == null) {
-            reset();
             currentCourse = null;
             return;
         }
         if (currentCourse != null && name.equals(currentCourse.name())) {
             return;
         }
-        if (loadedCourses.containsKey(name)) {
-            currentCourse = loadedCourses.get(name);
-        } else {
-            currentCourse = new Course(name);
-            loadedCourses.put(name, currentCourse);
-        }
+        currentCourse = new Course(name);
         reset();
+    }
+
+    public void monthlyCourse(String course) {
+        String name = "month/" + currentMonth + "/" + course;
+        course(name);
     }
 
     public List<Segment> segments() {

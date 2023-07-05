@@ -8,9 +8,6 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.scoreboard.ScoreboardObjective;
-import net.minecraft.scoreboard.ScoreboardPlayerScore;
-import net.minecraft.scoreboard.Team;
 import net.minecraft.text.Text;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -26,6 +23,7 @@ import static com.simplymerlin.warriorsplits.util.Utils.durationToString;
 public abstract class InGameHudMixin {
 
     Timer timer = Timer.instance();
+    boolean hidden = true;
     DecimalFormat df = new DecimalFormat("#0.0");
 
     int yOffset = 10;
@@ -40,64 +38,65 @@ public abstract class InGameHudMixin {
 
     @Inject(at = @At("TAIL"), method = "render")
     public void renderSplits(MatrixStack matrices, float tickDelta, CallbackInfo ci) {
+        if (timer.course() == null) {
+            return;
+        }
         MinecraftClient minecraftClient = MinecraftClient.getInstance();
 
         TextRenderer renderer = minecraftClient.textRenderer;
         int i = 0;
         // this is a lot of code being ran on one frame, but this entire function takes approximately 0.000040 seconds!!!!
-        if (timer.course() != null) {
-            var segments = timer.segments();
-            for (Segment segment : segments) {
-                int y = yOffset + i * lineHeight;
-                boolean hasHappenedOrCurrent = i <= timer.currentSplit();
-                boolean isCurrent = i == timer.currentSplit();
+        var segments = timer.segments();
+        for (Segment segment : segments) {
+            int y = yOffset + i * lineHeight;
+            boolean hasHappenedOrCurrent = i <= timer.currentSplit();
+            boolean isCurrent = i == timer.currentSplit();
 
-                // Render segment name
-                renderer.drawWithShadow(matrices, segment.name(), xSegmentName, y, isCurrent ? activeColor : inactiveColor);
+            // Render segment name
+            renderer.drawWithShadow(matrices, segment.name(), xSegmentName, y, isCurrent ? activeColor : inactiveColor);
 
-                String relativeTime = "";
-                boolean positive = false;
+            String relativeTime = "";
+            boolean positive = false;
 
-                if (segment.comparisonRelativeTime() != null && hasHappenedOrCurrent) {
-                    long relativeTimeMillis = segment.relativeTime(timer.startTime()).toMillis() - segment.comparisonRelativeTime().toMillis();
-                    double time = (double) relativeTimeMillis / 1000;
-                    positive = time > 0;
+            if (segment.comparisonRelativeTime() != null && hasHappenedOrCurrent) {
+                long relativeTimeMillis = segment.relativeTime(timer.startTime()).toMillis() - segment.comparisonRelativeTime().toMillis();
+                double time = (double) relativeTimeMillis / 1000;
+                positive = time > 0;
 
-                    if (time > -5 || segment.ended()) {
-                        relativeTime = (positive ? "+" : "") + df.format(time);
-                    }
+                if (time > -5 || segment.ended()) {
+                    relativeTime = (positive ? "+" : "") + df.format(time);
                 }
-
-                int relativeColor = positive ? positiveColor : negativeColor;
-                if (
-                        segment.length() != null &&
-                        segment.comparison(ComparisonType.GOLD).length() != null &&
-                        segment.length().compareTo(segment.comparison(ComparisonType.GOLD).length()) < 0) {
-                    relativeColor = 0xFFAA00;
-                }
-
-                int relativeTimeWidth = renderer.getWidth(relativeTime);
-                renderer.drawWithShadow(matrices, relativeTime, xRelativeTime - relativeTimeWidth, y, relativeColor);
-
-                Duration time = null;
-
-                if (segment.comparisonRelativeTime() != null) {
-                    time = segment.comparisonRelativeTime();
-                }
-
-                // If there's already a relative time, use the segment's relative time
-                if (segment.relativeTime() != null) {
-                    time = segment.relativeTime();
-                }
-
-                String bestTime = time != null ? durationToString(time) : "-";
-
-                // Time width shouldn't change ever (unless someone takes 100 minutes on one segment?) so caching this would be a quick performance win.
-                int bestTimeWidth = renderer.getWidth(bestTime);
-                renderer.drawWithShadow(matrices, bestTime, xBestTime - bestTimeWidth, y, isCurrent ? activeColor : inactiveColor);
-
-                i++;
             }
+
+            int relativeColor = positive ? positiveColor : negativeColor;
+            if (
+                    segment.length() != null &&
+                    segment.comparison(ComparisonType.GOLD).length() != null &&
+                    segment.length().compareTo(segment.comparison(ComparisonType.GOLD).length()) < 0) {
+                relativeColor = 0xFFAA00;
+            }
+
+            int relativeTimeWidth = renderer.getWidth(relativeTime);
+            renderer.drawWithShadow(matrices, relativeTime, xRelativeTime - relativeTimeWidth, y, relativeColor);
+
+            Duration time = null;
+
+            if (segment.comparisonRelativeTime() != null) {
+                time = segment.comparisonRelativeTime();
+            }
+
+            // If there's already a relative time, use the segment's relative time
+            if (segment.relativeTime() != null) {
+                time = segment.relativeTime();
+            }
+
+            String bestTime = time != null ? durationToString(time) : "-";
+
+            // Time width shouldn't change ever (unless someone takes 100 minutes on one segment?) so caching this would be a quick performance win.
+            int bestTimeWidth = renderer.getWidth(bestTime);
+            renderer.drawWithShadow(matrices, bestTime, xBestTime - bestTimeWidth, y, isCurrent ? activeColor : inactiveColor);
+
+            i++;
         }
         int y = yOffset + (i + 1) * lineHeight;
 
@@ -121,28 +120,6 @@ public abstract class InGameHudMixin {
     public void split(Text text, CallbackInfo ci) {
         if (text.getString().startsWith("+1")) {
             timer.split();
-        }
-    }
-
-    // TODO: find method that doesnt run every frame LOL
-    @Inject(at = @At("TAIL"), method = "renderScoreboardSidebar")
-    public void setCourse(MatrixStack matrixStack, ScoreboardObjective scoreboardObjective, CallbackInfo ci) {
-        if (
-                //hey noxcrew dev reading this code, when in dojo the displayname has a space v so please don't remove that!!!
-                scoreboardObjective.getDisplayName().getString().equals("MCCI: PARKOUR WARRIOR ")
-        ) {
-            for (ScoreboardPlayerScore score : scoreboardObjective.getScoreboard().getAllPlayerScores(scoreboardObjective)) {
-                Team team = scoreboardObjective.getScoreboard().getPlayerTeam(score.getPlayerName());
-                if (team == null)
-                    continue;
-                Text balls = team.getPrefix();
-                // COURSE: Course #
-                if (balls.getString().contains("COURSE:")) {
-                    timer.course("month/1/" + balls.getString().substring(17));
-                }
-            }
-        } else {
-            //timer.course(null);
         }
     }
 
